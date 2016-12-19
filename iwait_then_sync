@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Detect file changes and copy-and-paste to TARGET dir
+# for web project develop
+
+# Important to add slash to pwd, means rsync would copy
+# > the content of directory
+SOURCE_DIR=$(pwd)/
+TARGET_DIR=$1
+
+read -e -p "Enter target directory: " TARGET_DIR
+while [ ! -d $TARGET_DIR ]
+do
+  echo "$TARGET_DIR is not a valid directory!"
+  read -e -p "Enter target directory: " TARGET_DIR
+done
+
+# TODO test the file with tilde (~) fix
+EXCLUDE_PATTERN="^[.]"
+
+inotifywait -mr --timefmt '%d/%m/%y %H:%M' --format '%T %w %f' \
+	-e close_write --exclude $EXCLUDE_PATTERN $SOURCE_DIR | while read date time dir file; do
+  rsync --update -alvr --exclude '*/.*' --exclude "*/WEB-INF" --exclude "*~" $SOURCE_DIR $TARGET_DIR
+done 
